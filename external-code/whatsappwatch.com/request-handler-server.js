@@ -2,7 +2,7 @@ import { createServer } from 'http'
 import { readBody, send } from '../helper-functions/misc.js'
 import { deleteMessage, getGroups, sendTextMessage } from './baileys-functions.js'
 
-const BAILEYS_SERVER_PORT = 3333
+const BAILEYS_SERVER_PORT = process.env.PORT || 3333
 
 const server = createServer(async (req, res) => {
 	const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`)

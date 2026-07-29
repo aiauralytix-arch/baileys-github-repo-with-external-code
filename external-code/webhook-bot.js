@@ -1,4 +1,4 @@
-import makeWASocket, { fetchLatestBaileysVersion, proto } from '../lib/index.js'
+import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, proto } from '../lib/index.js'
 import P from 'pino'
 import qrcode from 'qrcode-terminal'
 import { pathToFileURL } from 'url'
@@ -41,7 +41,7 @@ const connectBot = async () => {
 
 	sock.ev.on('creds.update', saveAuth)
 
-	sock.ev.on('connection.update', async ({ connection, qr }) => {
+	sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
 		if (qr && !sock.authState.creds.registered) {
 			if (USE_PAIRING_CODE) {
 				const code = await sock.requestPairingCode(PHONE_NUMBER_USED_BY_BAILYES)
@@ -65,7 +65,13 @@ const connectBot = async () => {
 				logger.info('saved auth after pairing restart')
 			}
 
+			// note: added this so we restart websocket-connection on deployed-server
 			connected = false
+			const reason = lastDisconnect?.error?.output?.statusCode
+			if (reason === DisconnectReason.restartRequired) {
+				startPromise = undefined
+				await startBot()
+			}
 		}
 	})
 

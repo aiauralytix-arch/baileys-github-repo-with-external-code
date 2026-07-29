@@ -84,6 +84,7 @@ const connectBot = async () => {
 		if (type !== 'notify') { return }
 
 		const incomingMessages = messages.filter(message => !message.key.fromMe)
+		logger.info({ count: incomingMessages.length }, 'received incoming WhatsApp messages')
 
 		for (const message of incomingMessages) {
 			if (message.key.id) {

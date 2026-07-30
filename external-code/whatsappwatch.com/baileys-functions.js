@@ -38,6 +38,18 @@ export const getGroups = async () => {
 	}
 }
 
+export const removeGroupParticipants = async (groupId, participants) => {
+	if (!groupId || typeof groupId !== 'string') {
+		throw new Error('Group id is required')
+	}
+
+	if (!Array.isArray(participants) || !participants.length || participants.some(participant => typeof participant !== 'string')) {
+		throw new Error('Participants are required')
+	}
+
+	return requireSocket(getSocket(), isBotConnected()).groupParticipantsUpdate(groupId, participants.map(normalizeJid), 'remove')
+}
+
 /**
  * Revokes a WhatsApp message by Whapi-style message id.
  *

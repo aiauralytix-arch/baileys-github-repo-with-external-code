@@ -2,7 +2,11 @@ import { createServer } from 'http'
 import { readBody, send } from '../helper-functions/misc.js'
 import { deleteMessage, getGroups, removeGroupParticipants, sendTextMessage } from './baileys-functions.js'
 
-const BAILEYS_SERVER_PORT = process.env.PORT || 3333
+const BAILEYS_SERVER_PORT = process.env.BAILEYS_SERVER_PORT
+
+if (!BAILEYS_SERVER_PORT) {
+	throw new Error('BAILEYS_SERVER_PORT is required')
+}
 
 const server = createServer(async (req, res) => {
 	try {

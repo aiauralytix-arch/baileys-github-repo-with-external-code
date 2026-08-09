@@ -17,12 +17,10 @@ let sock
 let startPromise
 let persistAuth = true
 let connected = false
-let latestQr
 
 export const isBotConnected = () => connected
 export const getSocket = () => sock
 export const getMessageKey = messageId => messageKeys.get(messageId)
-export const getQrLoginStatus = () => ({ connected, qr: connected ? undefined : latestQr })
 
 const connectBot = async () => {
 	const auth = await loadAuth(authFile)
@@ -46,8 +44,6 @@ const connectBot = async () => {
 
 	sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
 		if (qr && !sock.authState.creds.registered) {
-			latestQr = qr
-
 			if (USE_PAIRING_CODE) {
 				const code = await sock.requestPairingCode(PHONE_NUMBER_USED_BY_BAILYES)
 				logger.info({ code, phoneNumber: PHONE_NUMBER_USED_BY_BAILYES }, 'pair this code in WhatsApp linked devices')
@@ -59,7 +55,6 @@ const connectBot = async () => {
 
 		if (connection === 'open') {
 			connected = true
-			latestQr = undefined
 			await writeAuth()
 			persistAuth = false
 			logger.info('connected; auth persistence paused')
@@ -147,10 +142,7 @@ export const startBot = async () => {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-	Promise.all([
-		import('./whatsappwatch.com/request-handler-server.js'), // STARTS THE SERVER FOR WHATSAPPWATCH
-		import('./portable-qr-login/server.js')
-	])
+	import('./whatsappwatch.com/request-handler-server.js')  // STARTS THE SERVER FOR WHATSAPPWATCH
 		.then(() => startBot())
 		.catch(err => {
 			logger.error({ err }, 'failed to start WhatsApp bot')

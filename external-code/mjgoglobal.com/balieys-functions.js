@@ -1,4 +1,5 @@
 import { jidDecode } from '../../lib/index.js'
+import { getEligibleGroupJoinDmRecipients } from './group-join-rules.js'
 
 /**
  * mjgoglobal-specific Baileys actions.
@@ -94,9 +95,7 @@ export const sendGroupJoinMessage = async (sock, { groupId, participants, groupN
 	const groupBody = renderGroupJoinMessage({ participants, groupId, groupName })
 	const groupResult = await sendTextMessage(sock, groupId, groupBody)
 	const dmResults = await Promise.all(
-		(participants || []).map(participant =>
-			sendTextMessage(sock, participant.phoneNumber || participant.id, GROUP_JOIN_DM_MESSAGE)
-		)
+		getEligibleGroupJoinDmRecipients(participants).map(recipient => sendTextMessage(sock, recipient, GROUP_JOIN_DM_MESSAGE))
 	)
 
 	return {

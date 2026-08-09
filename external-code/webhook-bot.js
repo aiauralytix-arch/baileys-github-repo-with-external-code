@@ -4,6 +4,7 @@ import qrcode from 'qrcode-terminal'
 import { pathToFileURL } from 'url'
 import { createAuthState, loadAuth } from './helper-functions/misc.js'
 import { sendGroupJoinMessage } from './mjgoglobal.com/balieys-functions.js'
+import { isVerifiedPrivateGroup } from './mjgoglobal.com/group-join-rules.js'
 import { sendMessagesWebhook } from './whatsappwatch.com/webhook-functions.js'
 
 const PHONE_NUMBER_USED_BY_BAILYES = '919555488118'
@@ -107,6 +108,10 @@ const connectBot = async () => {
 
 	sock.ev.on('group-participants.update', async update => {
 		if (update.action !== 'add') { return }
+		if (!isVerifiedPrivateGroup(update.id)) {
+			logger.info({ groupId: update.id }, 'skipping welcome message for unverified whapi group')
+			return
+		}
 
 		let groupName
 		try {

@@ -3,6 +3,7 @@ import P from 'pino'
 import qrcode from 'qrcode-terminal'
 import { pathToFileURL } from 'url'
 import { createAuthState, loadAuth } from './helper-functions/misc.js'
+import { sendGroupJoinMessage } from './mjgoglobal.com/balieys-functions.js'
 import { sendMessagesWebhook } from './whatsappwatch.com/webhook-functions.js'
 
 const PHONE_NUMBER_USED_BY_BAILYES = '919555488118'
@@ -92,7 +93,35 @@ const connectBot = async () => {
 			}
 		}
 
-		await sendMessagesWebhook(incomingMessages)
+		try {
+			await sendMessagesWebhook(incomingMessages)
+		} catch (err) {
+			logger.warn({ err }, 'failed to send incoming messages webhook')
+		}
+	})
+
+
+	// ============================================================
+	// =================== ON NEW USER JOINS ======================
+	// ============================================================
+
+	sock.ev.on('group-participants.update', async update => {
+		if (update.action !== 'add') { return }
+
+		let groupName
+		try {
+			const metadata = await sock.groupMetadata(update.id)
+			groupName = metadata.subject
+		} catch (err) {
+			logger.warn({ err, groupId: update.id }, 'failed to fetch group metadata for welcome message')
+		}
+
+		try {
+			await sendGroupJoinMessage(sock, { groupId: update.id, participants: update.participants, groupName })
+			logger.info({ groupId: update.id, participants: update.participants.map(participant => participant.id) }, 'sent group join welcome message')
+		} catch (err) {
+			logger.warn({ err, groupId: update.id, participants: update.participants.map(participant => participant.id) }, 'failed to send group join welcome message')
+		}
 	})
 
 	return sock

@@ -1,5 +1,6 @@
 import { getMessageKey, getSocket, isBotConnected } from '../webhook-bot.js'
-import { formatGroup, normalizeJid, requireSocket } from '../helper-functions/misc.js'
+import { normalizeJid, requireSocket } from '../helper-functions/misc.js'
+import { formatGroupForGroupsEndpoint } from './get-groups-formatting.js'
 
 /**
  * Whapi-compatible actions backed by the live Baileys socket.
@@ -32,9 +33,11 @@ export const sendTextMessage = async (to, body) => {
  * whatsappwatch.com/app/api/whapi/groups/route.ts.
  */
 export const getGroups = async () => {
-	const groups = await requireSocket(getSocket(), isBotConnected()).groupFetchAllParticipating()
+	const socket = requireSocket(getSocket(), isBotConnected())
+	const groups = await socket.groupFetchAllParticipating()
+
 	return {
-		groups: Object.values(groups).map(formatGroup)
+		groups: await Promise.all(Object.values(groups).map(group => formatGroupForGroupsEndpoint(socket, group)))
 	}
 }
 
